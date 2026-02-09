@@ -1,3 +1,14 @@
+// App.tsx or index.js - MUST be first import
+import * as Crypto from 'expo-crypto'
+
+if (!global.crypto) global.crypto = {} as any
+// @ts-ignore
+global.crypto.getRandomValues = Crypto.getRandomValues
+
+// Now import the SDK
+import { Wallet, SingleKey } from '@arkade-os/sdk'
+import { ExpoArkProvider, ExpoIndexerProvider } from '@arkade-os/sdk/adapters/expo'
+
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

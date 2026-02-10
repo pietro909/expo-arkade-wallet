@@ -75,6 +75,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   // read wallet from storage on mount
   useEffect(() => {
     readWalletFromStorage().then((walletFromStorage) => {
+      console.log("wallet from storage!", walletFromStorage)
       if (walletFromStorage) setWallet(walletFromStorage)
       setWalletLoaded(true)
     })

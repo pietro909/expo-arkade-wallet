@@ -1,35 +1,62 @@
-// App.tsx or index.js - MUST be first import
+// MUST be first import — polyfill crypto.getRandomValues for React Native
 import * as Crypto from 'expo-crypto'
 
-if (!global.crypto) global.crypto = {} as any
-// @ts-ignore
-global.crypto.getRandomValues = Crypto.getRandomValues
+if (!global.crypto?.getRandomValues) {
+  if (!global.crypto) global.crypto = {} as any
+  // @ts-ignore
+  global.crypto.getRandomValues = Crypto.getRandomValues
+}
 
-// Now import the SDK
-import { Wallet, SingleKey } from '@arkade-os/sdk'
-import { ExpoArkProvider, ExpoIndexerProvider } from '@arkade-os/sdk/adapters/expo'
+import { Stack } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
+import 'react-native-reanimated'
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { ConfigProvider } from '@/providers/config'
+import { AspProvider } from '@/providers/asp'
+import { NotificationsProvider } from '@/providers/notifications'
+import { FiatProvider } from '@/providers/fiat'
+import { FlowProvider } from '@/providers/flow'
+import { WalletProvider } from '@/providers/wallet'
+import { LightningProvider } from '@/providers/lightning'
+import { LimitsProvider } from '@/providers/limits'
+import { FeesProvider } from '@/providers/fees'
+import { OptionsProvider } from '@/providers/options'
+import { NudgeProvider } from '@/providers/nudge'
+import { AnnouncementProvider } from '@/providers/announcements'
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    <ConfigProvider>
+      <AspProvider>
+        <NotificationsProvider>
+          <FiatProvider>
+            <FlowProvider>
+              <WalletProvider>
+                <LightningProvider>
+                  <LimitsProvider>
+                    <FeesProvider>
+                      <OptionsProvider>
+                        <NudgeProvider>
+                          <AnnouncementProvider>
+                            <Stack screenOptions={{ headerShown: false }}>
+                              <Stack.Screen name="(tabs)" />
+                              <Stack.Screen name="onboarding" />
+                              <Stack.Screen name="unlock" />
+                              <Stack.Screen name="send" options={{ presentation: 'modal' }} />
+                              <Stack.Screen name="receive" options={{ presentation: 'modal' }} />
+                            </Stack>
+                            <StatusBar style="auto" />
+                          </AnnouncementProvider>
+                        </NudgeProvider>
+                      </OptionsProvider>
+                    </FeesProvider>
+                  </LimitsProvider>
+                </LightningProvider>
+              </WalletProvider>
+            </FlowProvider>
+          </FiatProvider>
+        </NotificationsProvider>
+      </AspProvider>
+    </ConfigProvider>
+  )
 }

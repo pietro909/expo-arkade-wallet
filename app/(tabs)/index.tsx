@@ -1,98 +1,184 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useContext } from 'react'
+import { View, Text, StyleSheet, Pressable, FlatList } from 'react-native'
+import { router } from 'expo-router'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { WalletContext } from '@/providers/wallet'
+import { ConfigContext } from '@/providers/config'
+import { FiatContext } from '@/providers/fiat'
+import { AspContext } from '@/providers/asp'
+import { FlowContext, emptyRecvInfo, emptySendInfo } from '@/providers/flow'
+import { prettyNumber, prettyHide, prettyAgo } from '@/lib/format'
+import { CurrencyDisplay, Tx } from '@/lib/types'
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function WalletHome() {
+  const { balance, txs, initialized } = useContext(WalletContext)
+  const { config, updateConfig } = useContext(ConfigContext)
+  const { toFiat } = useContext(FiatContext)
+  const { aspInfo } = useContext(AspContext)
+  const { setRecvInfo, setSendInfo, setTxInfo } = useContext(FlowContext)
 
-export default function HomeScreen() {
+  if (!initialized) return null
+
+  const showBalance = config.showBalance
+  const fiatAmount = toFiat(balance)
+  const fiatSymbol = config.fiat
+
+  const toggleShowBalance = () => {
+    updateConfig({ ...config, showBalance: !showBalance })
+  }
+
+  const handleSend = () => {
+    setSendInfo(emptySendInfo)
+    router.push('/send/form')
+  }
+
+  const handleReceive = () => {
+    setRecvInfo(emptyRecvInfo)
+    router.push('/receive/amount')
+  }
+
+  const handleTxPress = (tx: Tx) => {
+    setTxInfo(tx)
+    // TODO: navigate to tx detail when built
+  }
+
+  const renderBalanceMain = () => {
+    if (!showBalance) return prettyHide(balance, 'SATS')
+    return `${prettyNumber(balance)} SATS`
+  }
+
+  const renderBalanceSecondary = () => {
+    if (!showBalance) return prettyHide(fiatAmount, fiatSymbol)
+    if (config.currencyDisplay === CurrencyDisplay.Sats) return null
+    return `${prettyNumber(fiatAmount, 2)} ${fiatSymbol}`
+  }
+
+  const renderTxItem = ({ item: tx }: { item: Tx }) => {
+    const isReceived = tx.type === 'received'
+    const prefix = isReceived ? '+' : '-'
+    const color = tx.preconfirmed ? '#f59e0b' : isReceived ? '#22c55e' : '#fff'
+    const statusText = tx.preconfirmed
+      ? 'Unconfirmed'
+      : tx.createdAt
+        ? prettyAgo(tx.createdAt)
+        : ''
+
+    return (
+      <Pressable style={styles.txRow} onPress={() => handleTxPress(tx)}>
+        <View style={styles.txLeft}>
+          <Text style={styles.txType}>{isReceived ? 'Received' : 'Sent'}</Text>
+          <Text style={styles.txDate}>{statusText}</Text>
+        </View>
+        <View style={styles.txRight}>
+          <Text style={[styles.txAmount, { color }]}>
+            {showBalance ? `${prefix}${prettyNumber(tx.amount)} SATS` : prettyHide(tx.amount)}
+          </Text>
+          {showBalance && config.currencyDisplay !== CurrencyDisplay.Sats && (
+            <Text style={styles.txFiat}>
+              {prettyNumber(toFiat(tx.amount), 2)} {fiatSymbol}
+            </Text>
+          )}
+        </View>
+      </Pressable>
+    )
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {aspInfo.unreachable && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>Server unreachable</Text>
+        </View>
+      )}
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+      <Pressable style={styles.balanceContainer} onPress={toggleShowBalance}>
+        <Text style={styles.balanceLabel}>My balance</Text>
+        <Text style={styles.balance}>{renderBalanceMain()}</Text>
+        {renderBalanceSecondary() && (
+          <Text style={styles.balanceSecondary}>{renderBalanceSecondary()}</Text>
+        )}
+      </Pressable>
+
+      <View style={styles.actions}>
+        <Pressable style={styles.actionButton} onPress={handleSend}>
+          <Text style={styles.actionIcon}>↑</Text>
+          <Text style={styles.actionLabel}>Send</Text>
+        </Pressable>
+        <Pressable style={styles.actionButton} onPress={handleReceive}>
+          <Text style={styles.actionIcon}>↓</Text>
+          <Text style={styles.actionLabel}>Receive</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.txSection}>
+        <Text style={styles.txHeader}>Transaction history</Text>
+        {txs.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>📭</Text>
+            <Text style={styles.emptyText}>No transactions yet</Text>
+            <Text style={styles.emptySubtext}>Send or receive bitcoin to get started</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={txs}
+            keyExtractor={(_, i) => i.toString()}
+            renderItem={renderTxItem}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </SafeAreaView>
+  )
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: { flex: 1, backgroundColor: '#000' },
+  errorBanner: {
+    backgroundColor: '#ef4444',
+    padding: 8,
     alignItems: 'center',
+  },
+  errorBannerText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  balanceContainer: { alignItems: 'center', paddingVertical: 32, paddingHorizontal: 20 },
+  balanceLabel: { fontSize: 14, color: '#888', marginBottom: 4 },
+  balance: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
+  balanceSecondary: { fontSize: 16, color: '#888', marginTop: 4 },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  actionButton: {
+    backgroundColor: '#7C3AED',
+    paddingVertical: 14,
+    paddingHorizontal: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  actionIcon: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  actionLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  txSection: { flex: 1, paddingHorizontal: 20 },
+  txHeader: { fontSize: 18, fontWeight: '600', color: '#fff', marginBottom: 12 },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 },
+  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyText: { color: '#888', fontSize: 16, fontWeight: '500' },
+  emptySubtext: { color: '#666', fontSize: 14, marginTop: 4 },
+  txRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#222',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+  txLeft: { gap: 2 },
+  txType: { fontSize: 16, fontWeight: '500', color: '#fff' },
+  txDate: { fontSize: 13, color: '#888' },
+  txRight: { alignItems: 'flex-end', gap: 2 },
+  txAmount: { fontSize: 16, fontWeight: '500' },
+  txFiat: { fontSize: 13, color: '#888' },
+})

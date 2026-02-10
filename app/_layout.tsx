@@ -7,6 +7,11 @@ if (!global.crypto?.getRandomValues) {
   global.crypto.getRandomValues = Crypto.getRandomValues
 }
 
+// IndexedDB polyfill — must come before any SDK import.
+// On native: loads indexeddbshim over our WebSQL/expo-sqlite adapter.
+// On web: no-op (native IndexedDB is available).
+import '@/polyfills/indexeddb'
+
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useContext, useEffect } from 'react'

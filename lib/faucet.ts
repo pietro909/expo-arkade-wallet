@@ -6,7 +6,7 @@ type AspInfo = ArkInfo & {
 }
 
 const faucet = {
-  regtest: 'http://localhost:9999',
+  regtest: 'http://192.168.0.115:9999',
   signet: 'https://faucet.signet.arkade.sh',
   mutinynet: 'https://faucet.mutinynet.arkade.sh',
 }

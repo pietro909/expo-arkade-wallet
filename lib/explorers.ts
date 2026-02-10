@@ -14,8 +14,8 @@ const explorers: Explorers = {
     web: 'https://mempool.space',
   },
   regtest: {
-    api: 'http://localhost:3000',
-    web: 'http://localhost:5000',
+    api: 'http://192.168.0.115:3000',
+    web: 'http://192.168.0.115:5000',
   },
   signet: {
     api: 'https://mutinynet.com/api',

@@ -15,6 +15,7 @@ import * as secp from '@noble/secp256k1'
 import { ConfigContext } from './config'
 import { maxPercentage } from '@/lib/constants'
 import { Indexer } from '@/lib/indexer'
+import {ExpoWalletRepository, ExpoContractRepository} from "@/lib/db";
 
 const defaultWallet: Wallet = {
   network: '',
@@ -139,6 +140,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       arkProvider: new ExpoArkProvider(arkServerUrl),
       indexerProvider: new ExpoIndexerProvider(arkServerUrl),
       esploraUrl,
+      storage: {
+        walletRepository: new ExpoWalletRepository(),
+        contractRepository: new ExpoContractRepository()
+      }
     })
 
     setSdkWallet(w)

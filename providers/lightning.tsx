@@ -15,12 +15,13 @@ import { ConfigContext } from './config'
 import { consoleError, consoleLog } from '@/lib/logs'
 import { sendOffChain } from '@/lib/asp'
 import { PendingSwap } from '@/lib/types'
+import {ExpoSwapRepository} from "@/lib/db";
 
 const BASE_URLS: Record<Network, string | null> = {
   bitcoin: 'https://api.ark.boltz.exchange',
   mutinynet: 'https://api.boltz.mutinynet.arkade.sh',
   signet: 'https://boltz.signet.arkade.sh',
-  regtest: 'http://localhost:9069',
+  regtest: 'http://192.168.0.115:9069',
   testnet: null,
 }
 
@@ -86,6 +87,7 @@ export const LightningProvider = ({ children }: { children: ReactNode }) => {
       wallet: sdkWallet,
       swapProvider,
       swapManager: config.apps.boltz.connected,
+      swapRepository: new ExpoSwapRepository()
     })
 
     setArkadeLightning(instance)

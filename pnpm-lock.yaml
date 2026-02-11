@@ -13,7 +13,7 @@ importers:
         version: file:../boltz-swap
       '@arkade-os/sdk':
         specifier: file:../ts-sdk
-        version: file:../ts-sdk
+        version: file:../ts-sdk(indexeddbshim@16.1.0)
       '@expo/metro-runtime':
         specifier: ~6.1.2
         version: 6.1.2(expo@54.0.33)(react-dom@19.1.0(react@19.1.0))(react-native@0.81.4(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -174,11 +174,11 @@ packages:
   '@arkade-os/sdk@file:../ts-sdk':
     resolution: {directory: ../ts-sdk, type: directory}
     engines: {node: '>=20.0.0'}
-
-  '@arkade-os/sdk@https://codeload.github.com/arkade-os/ts-sdk/tar.gz/6545982d5b8f06ca25bfd1a04371d5853f152b59':
-    resolution: {tarball: https://codeload.github.com/arkade-os/ts-sdk/tar.gz/6545982d5b8f06ca25bfd1a04371d5853f152b59}
-    version: 0.3.13
-    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      indexeddbshim: '>=16.0.0'
+    peerDependenciesMeta:
+      indexeddbshim:
+        optional: true
 
   '@babel/code-frame@7.10.4':
     resolution: {integrity: sha512-vG6SvB6oYEhvgisZNFRmRCUkLz11c7rp+tbNTynGqc6mS1d5ATd/sGyV6W0KZZnXRKMTzZDRgQT3Ou9jhpAfUg==}
@@ -4852,14 +4852,14 @@ snapshots:
 
   '@arkade-os/boltz-swap@file:../boltz-swap':
     dependencies:
-      '@arkade-os/sdk': https://codeload.github.com/arkade-os/ts-sdk/tar.gz/6545982d5b8f06ca25bfd1a04371d5853f152b59
+      '@arkade-os/sdk': link:../ts-sdk
       '@noble/hashes': 2.0.1
       '@scure/base': 2.0.0
       '@scure/btc-signer': 2.0.1
       bip68: 1.0.4
       light-bolt11-decoder: 3.2.0
 
-  '@arkade-os/sdk@file:../ts-sdk':
+  '@arkade-os/sdk@file:../ts-sdk(indexeddbshim@16.1.0)':
     dependencies:
       '@marcbachmann/cel-js': 7.3.1
       '@noble/curves': 2.0.0
@@ -4867,15 +4867,8 @@ snapshots:
       '@scure/base': 2.0.0
       '@scure/btc-signer': 2.0.1
       bip68: 1.0.4
-
-  '@arkade-os/sdk@https://codeload.github.com/arkade-os/ts-sdk/tar.gz/6545982d5b8f06ca25bfd1a04371d5853f152b59':
-    dependencies:
-      '@marcbachmann/cel-js': 7.3.1
-      '@noble/curves': 2.0.0
-      '@noble/secp256k1': 3.0.0
-      '@scure/base': 2.0.0
-      '@scure/btc-signer': 2.0.1
-      bip68: 1.0.4
+    optionalDependencies:
+      indexeddbshim: 16.1.0
 
   '@babel/code-frame@7.10.4':
     dependencies:
@@ -6436,7 +6429,7 @@ snapshots:
 
   '@scure/btc-signer@2.0.1':
     dependencies:
-      '@noble/curves': 2.0.0
+      '@noble/curves': 2.0.1
       '@noble/hashes': 2.0.1
       '@scure/base': 2.0.0
       micro-packed: 0.8.0

@@ -8,6 +8,6 @@
  * Must be imported AFTER the crypto polyfill and BEFORE any SDK import.
  */
 
-import { setupExpoDb } from '@arkade-os/sdk/adapters/expo';
+import { setupExpoDb } from '@arkade-os/sdk/adapters/expo-db';
 
 setupExpoDb();

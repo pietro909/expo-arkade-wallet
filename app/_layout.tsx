@@ -12,6 +12,20 @@ if (!global.crypto?.getRandomValues) {
 // On web: no-op (native IndexedDB is available).
 import '@/polyfills/indexeddb'
 
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { IndexedDBWalletRepository, IndexedDBContractRepository } from '@arkade-os/sdk'
+import { defineExpoBackgroundTask } from '@arkade-os/sdk/wallet/expo'
+import { AsyncStorageTaskQueue } from '@arkade-os/sdk/worker/expo'
+
+// ── Background task registration (MUST be at module scope) ────────
+export const taskQueue = new AsyncStorageTaskQueue(AsyncStorage)
+
+defineExpoBackgroundTask('ark-background-poll', {
+  taskQueue,
+  walletRepository: new IndexedDBWalletRepository(),
+  contractRepository: new IndexedDBContractRepository(),
+})
+
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useContext, useEffect } from 'react'

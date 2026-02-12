@@ -8,14 +8,15 @@ import { FlowContext } from './flow'
 import { consoleError } from '@/lib/logs'
 import { Tx, Vtxo, Wallet } from '@/lib/types'
 import { calcBatchLifetimeMs, calcNextRollover } from '@/lib/wallet'
-import { IWallet, NetworkName, SingleKey, Wallet as SdkWallet } from '@arkade-os/sdk'
-import { ExpoArkProvider, ExpoIndexerProvider } from '@arkade-os/sdk/adapters/expo'
+import { IWallet, NetworkName, SingleKey } from '@arkade-os/sdk'
+import { IndexedDBWalletRepository, IndexedDBContractRepository } from '@arkade-os/sdk'
+import { ExpoWallet } from '@arkade-os/sdk/wallet/expo'
 import { hex } from '@scure/base'
 import * as secp from '@noble/secp256k1'
 import { ConfigContext } from './config'
 import { maxPercentage } from '@/lib/constants'
 import { Indexer } from '@/lib/indexer'
-import { IndexedDBWalletRepository, IndexedDBContractRepository } from '@arkade-os/sdk'
+import { taskQueue } from '@/app/_layout'
 
 const defaultWallet: Wallet = {
   network: '',
@@ -136,15 +137,20 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     updateConfig({ ...config, pubkey })
 
     const identity = SingleKey.fromHex(hex.encode(privateKey))
-    const w = await SdkWallet.create({
+    const w = await ExpoWallet.setup({
       identity,
-      arkProvider: new ExpoArkProvider(arkServerUrl),
-      indexerProvider: new ExpoIndexerProvider(arkServerUrl),
+      arkServerUrl,
       esploraUrl,
       storage: {
         walletRepository: new IndexedDBWalletRepository(),
-        contractRepository: new IndexedDBContractRepository()
-      }
+        contractRepository: new IndexedDBContractRepository(),
+      },
+      background: {
+        taskName: 'ark-background-poll',
+        taskQueue,
+        foregroundIntervalMs: 20_000,
+        minimumBackgroundInterval: 15,
+      },
     })
 
     setSdkWallet(w)
@@ -156,6 +162,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const lockWallet = async () => {
+    if (sdkWallet && 'dispose' in sdkWallet) {
+      await (sdkWallet as ExpoWallet).dispose()
+    }
     setSdkWallet(undefined)
     setInitialized(false)
     if (pollingRef.current) clearInterval(pollingRef.current)
